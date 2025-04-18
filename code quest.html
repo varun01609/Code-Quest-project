@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Quest - Level Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #6ee7ff;
+      --secondary: #a78bfa;
+      --success: #4ade80;
+      --danger: #f87171;
+      --dark: #0f0f1a;
+      --darker: #18182b;
+      --light: #ffffff;
+      --gray: #d1d5db;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--dark);
+      color: var(--light);
+      overflow: hidden;
+      height: 100vh;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background-color: var(--darker);
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 10;
+      position: relative;
+    }
+    
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    
+    header h1 span {
+      color: var(--secondary);
+    }
+    
+    .level-container {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+    
+    .sidebar {
+      width: 220px;
+      background-color: var(--darker);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      border-right: 1px solid rgba(110, 231, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar:hover {
+      box-shadow: 0 0 20px rgba(110, 231, 255, 0.1);
+    }
+    
+    .level-btn {
+      background: linear-gradient(145deg, #1e1e2e, #27273f);
+      border: none;
+      color: var(--primary);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .level-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(110, 231, 255, 0.1), transparent);
+      transition: all 0.5s ease;
+    }
+    
+    .level-btn:hover::before {
+      left: 100%;
+    }
+    
+    .level-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(110, 231, 255, 0.2);
+    }
+    
+    .level-btn.completed {
+      border-left: 4px solid var(--success);
+    }
+    
+    .level-btn.active {
+      background: linear-gradient(145deg, #27273f, #1e1e2e);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stars {
+      display: flex;
+      gap: 3px;
+    }
+    
+    .star {
+      color: gold;
+      font-size: 0.7rem;
+      text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
+    }
+    
+    .editor-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(145deg, #0f0f1a, #18182b);
+    }
+    
+    .tabs {
+      display: flex;
+      background-color: var(--darker);
+      border-bottom: 1px solid rgba(110, 231, 255, 0.1);
+    }
+    
+    .tabs button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 1rem;
+      color: var(--secondary);
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .tabs button::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 3px;
+      background: var(--primary);
+      transition: all 0.3s ease;
+    }
+    
+    .tabs button:hover {
+      color: var(--primary);
+    }
+    
+    .tabs button.active {
+      color: var(--primary);
+    }
+    
+    .tabs button.active::after {
+      width: 80%;
+      left: 10%;
+    }
+    
+    .editor-area {
+      display: flex;
+      height: 100%;
+      position: relative;
+    }
+    
+    .code-area, .preview-area {
+      flex: 1;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .code-area {
+      border-right: 1px solid rgba(110, 231, 255, 0.1);
+    }
+    
+    .code-header {
+      margin-bottom: 1rem;
+    }
+    
+    .level-title {
+      color: var(--primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+    
+    .level-description {
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 100%;
+      background-color: rgba(15, 15, 26, 0.8);
+      color: var(--gray);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      border: 1px solid rgba(110, 231, 255, 0.2);
+      outline: none;
+      border-radius: 8px;
+      padding: 1.2rem;
+      resize: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(110, 231, 255, 0.3);
+    }
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    iframe:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .btn {
+      background-color: transparent;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 2px solid;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn i {
+      font-size: 0.9rem;
+    }
+    
+    .hint-btn {
+      color: var(--secondary);
+      border-color: var(--secondary);
+    }
+    
+    .hint-btn:hover {
+      background-color: rgba(167, 139, 250, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .submit-btn {
+      color: var(--success);
+      border-color: var(--success);
+    }
+    
+    .submit-btn:hover {
+      background-color: rgba(74, 222, 128, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .reset-btn {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    
+    .reset-btn:hover {
+      background-color: rgba(248, 113, 113, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .score-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .score {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(145deg, #1e1e2e, #27273f);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(110, 231, 255, 0.1);
+    }
+    
+    .progress-container {
+      width: 100%;
+      background-color: rgba(39, 39, 63, 0.5);
+      border-radius: 8px;
+      margin: 1rem 0 0;
+      overflow: hidden;
+      height: 8px;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, 
+                  transparent, 
+                  rgba(255, 255, 255, 0.2), 
+                  transparent);
+      animation: progressShine 2s infinite;
+    }
+    
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .completion-message {
+      color: var(--success);
+      font-size: 0.9rem;
+      margin-top: 0.8rem;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .completion-message.show {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .modal-content {
+      background: linear-gradient(145deg, #1e1e2e, #27273f);
+      padding: 2.5rem;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      border: 1px solid rgba(110, 231, 255, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      animation: modalEnter 0.5s ease;
+    }
+    
+    @keyframes modalEnter {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .modal-content::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(110, 231, 255, 0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .modal-title {
+      color: var(--primary);
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      font-family: 'Orbitron', sans-serif;
+      position: relative;
+    }
+    
+    .modal-message {
+      color: var(--gray);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+      position: relative;
+    }
+    
+    .modal-btn {
+      background: linear-gradient(145deg, var(--primary), #5ad7f0);
+      color: var(--dark);
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(110, 231, 255, 0.3);
+    }
+    
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(110, 231, 255, 0.4);
+    }
+    
+    .modal-btn:active {
+      transform: translateY(0);
+    }
+    
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: var(--primary);
+      opacity: 0;
+      animation: confettiFall 5s linear forwards;
+    }
+    
+    @keyframes confettiFall {
+      0% { 
+        transform: translateY(-100px) rotate(0deg); 
+        opacity: 1;
+      }
+      100% { 
+        transform: translateY(100vh) rotate(360deg); 
+        opacity: 0;
+      }
+    }
+    
+    /* Glow effects */
+    .glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary);
+      }
+      to {
+        text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--secondary);
+      }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .level-container {
+        flex-direction: column;
+        height: auto;
+      }
+      
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+      }
+      
+      .level-btn {
+        min-width: 60px;
+        height: 60px;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0.5rem;
+      }
+      
+      .level-btn span {
+        font-size: 0.7rem;
+      }
+      
+      .stars {
+        display: none;
+      }
+      
+      .editor-area {
+        flex-direction: column;
+      }
+      
+      .code-area {
+        border-right: none;
+        border-bottom: 1px solid rgba(110, 231, 255, 0.1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span class="glow">&lt;E</span> Code Quest</h1>
+    <div class="score-container">
+      <div class="score">Score: <span id="score">0</span>/140</div>
+    </div>
+  </header>
+  <div class="level-container">
+    <div class="sidebar">
+      <strong style="padding: 0.5rem; color: var(--primary);">LEVELS</strong>
+      <button class="level-btn" onclick="loadLevel(0)">
+        <span>Level 1</span>
+        <div class="stars" id="stars-0"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(1)">
+        <span>Level 2</span>
+        <div class="stars" id="stars-1"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(2)">
+        <span>Level 3</span>
+        <div class="stars" id="stars-2"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(3)">
+        <span>Level 4</span>
+        <div class="stars" id="stars-3"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(4)">
+        <span>Level 5</span>
+        <div class="stars" id="stars-4"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(5)">
+        <span>Level 6</span>
+        <div class="stars" id="stars-5"></div>
+      </button>
+      <button class="level-btn" onclick="loadLevel(6)">
+        <span>Level 7</span>
+        <div class="stars" id="stars-6"></div>
+      </button>
+    </div>
+    <div class="editor-section">
+      <div class="tabs">
+        <button class="active" onclick="switchTab('html')">HTML</button>
+        <button onclick="switchTab('css')">CSS</button>
+        <button onclick="switchTab('js')">JS</button>
+      </div>
+      <div class="editor-area">
+        <div class="code-area">
+          <div class="code-header">
+            <h3 class="level-title" id="level-title">Level 1: Basic HTML</h3>
+            <p class="level-description" id="level-description">Fix the basic HTML structure by closing all tags properly.</p>
+          </div>
+          <textarea id="htmlEditor" spellcheck="false" oninput="updatePreview()"></textarea>
+          <div class="action-buttons">
+            <button class="btn hint-btn" onclick="showHint()"><i class="fas fa-lightbulb"></i> Hint</button>
+            <button class="btn submit-btn" onclick="checkSolution()"><i class="fas fa-check"></i> Submit</button>
+            <button class="btn reset-btn" onclick="resetCode()"><i class="fas fa-undo"></i> Reset</button>
+          </div>
+          <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <p class="completion-message" id="completion-message">
+            <i class="fas fa-check-circle"></i> Level completed! +20 points
+          </p>
+        </div>
+        <div class="preview-area">
+          <iframe id="preview"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="congrats-modal">
+    <div class="modal-content">
+      <h2 class="modal-title">Congratulations!</h2>
+      <p class="modal-message" id="final-message">You've completed all levels with a perfect score!</p>
+      <button class="modal-btn" onclick="closeModal()">Continue</button>
+    </div>
+  </div>
+
+  <script>
+    const levels = [
+      {
+        title: "Level 1: Basic HTML",
+        description: "Fix the basic HTML structure by closing all tags properly.",
+        html: "<!-- Fix this HTML -->\n<h1>Welcome\n<p>This is the first level",
+        css: "",
+        js: "",
+        hint: "Close all tags properly. Remember that both <h1> and <p> need closing tags.",
+        solution: "<!-- Fix this HTML -->\n<h1>Welcome</h1>\n<p>This is the first level</p>"
+      },
+      {
+        title: "Level 2: HTML Structure",
+        description: "Fix the document structure and nesting of HTML elements.",
+        html: "<header>\n<html>\n<nav>\n<Home>\n<About>\n<Contact>\n</main>\n</main>\n<main>\nWelcome to My Website\n<h1>\n</h1>\n</main>\n</rsctce>",
+        css: "",
+        js: "",
+        hint: "Make sure tags are opened/closed correctly and nested logically. The document should start with <!DOCTYPE html> and have proper html, head, and body structure.",
+        solution: "<!DOCTYPE html>\n<html>\n<head>\n<title>My Website</title>\n</head>\n<body>\n<header>\n<nav>\n<a href='#'>Home</a>\n<a href='#'>About</a>\n<a href='#'>Contact</a>\n</nav>\n</header>\n<main>\n<h1>Welcome to My Website</h1>\n</main>\n</body>\n</html>"
+      },
+      {
+        title: "Level 3: List Fixing",
+        description: "Fix the unordered list structure.",
+        html: "<ul><li>Home<li>About<li>Contact",
+        css: "",
+        js: "",
+        hint: "Use closing </li> tags for each list item.",
+        solution: "<ul>\n<li>Home</li>\n<li>About</li>\n<li>Contact</li>\n</ul>"
+      },
+      {
+        title: "Level 4: Form Fixing",
+        description: "Fix the form structure and attributes.",
+        html: "<form action='/submit' method='post'>\n<label for='name'>Name:\n<input type='text' id='name' name='name'>\n<button type='button'>Submit</button>",
+        css: "",
+        js: "",
+        hint: "Close all tags properly and make sure the submit button has the correct type attribute.",
+        solution: "<form action='/submit' method='post'>\n<label for='name'>Name:</label>\n<input type='text' id='name' name='name'>\n<button type='submit'>Submit</button>\n</form>"
+      },
+      {
+        title: "Level 5: CSS Selectors",
+        description: "Fix the CSS selectors to style the elements correctly.",
+        html: "<div class='container'>\n<h1>Hello World</h1>\n<p class='intro'>Welcome to CSS</p>\n</div>",
+        css: "container {\n  background-color: lightblue;\n}\nh1 {\n  color: darkblue;\n}\n.intro {\n  font-size: 1.2em;\n}",
+        js: "",
+        hint: "Check the class selector syntax. Remember that class selectors need a dot prefix.",
+        solution: ".container {\n  background-color: lightblue;\n}\nh1 {\n  color: darkblue;\n}\n.intro {\n  font-size: 1.2em;\n}"
+      },
+      {
+        title: "Level 6: CSS Layout",
+        description: "Fix the CSS to create a proper flexbox layout.",
+        html: "<div class='flex-container'>\n<div>Item 1</div>\n<div>Item 2</div>\n<div>Item 3</div>\n</div>",
+        css: "flex-container {\n  display: flex;\n  justify-content: space-between;\n}",
+        js: "",
+        hint: "Check the class selector syntax and make sure all properties are correctly spelled.",
+        solution: ".flex-container {\n  display: flex;\n  justify-content: space-between;\n}"
+      },
+      {
+        title: "Level 7: Combined Fix",
+        description: "Fix both HTML and CSS to create a proper card component.",
+        html: "<div class=card>\n<h2Card Title</h2>\n<p>Card content goes here</p>\n</div>",
+        css: "card {\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  padding: 16px;\n  max-width: 300px;\n}",
+        js: "",
+        hint: "Check for missing quotes around attribute values and proper class selector syntax.",
+        solution: "<div class=\"card\">\n<h2>Card Title</h2>\n<p>Card content goes here</p>\n</div>",
+        cssSolution: ".card {\n  border: 1px solid #ccc;\n  border-radius: 8px;\n  padding: 16px;\n  max-width: 300px;\n}"
+      }
+    ];
+
+    let currentLevel = 0;
+    let score = 0;
+    let currentTab = 'html';
+    const completedLevels = Array(levels.length).fill(false);
+    const starRatings = Array(levels.length).fill(0);
+
+    function loadLevel(index) {
+      currentLevel = index;
+      document.getElementById("level-title").textContent = levels[index].title;
+      document.getElementById("level-description").textContent = levels[index].description;
+      document.getElementById("htmlEditor").value = levels[index].html;
+      document.getElementById("completion-message").classList.remove("show");
+      document.getElementById("progress-bar").style.width = "0%";
+      
+      // Update active level button
+      document.querySelectorAll(".level-btn").forEach((btn, i) => {
+        if (i === index) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+      
+      // Reset tab to HTML when loading new level
+      currentTab = 'html';
+      document.querySelectorAll(".tabs button").forEach((btn, i) => {
+        if (i === 0) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+      
+      updatePreview();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tabs button").forEach(btn => {
+        btn.classList.remove("active");
+      });
+      event.target.classList.add("active");
+      
+      // Switch between HTML, CSS, JS editors
+      if (tab === 'html') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].html;
+      } else if (tab === 'css') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].css || "/* No CSS for this level */";
+      } else if (tab === 'js') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].js || "/* No JavaScript for this level */";
+      }
+    }
+
+    function updatePreview() {
+      let htmlCode = "";
+      let cssCode = "";
+      
+      if (currentTab === 'html') {
+        htmlCode = document.getElementById("htmlEditor").value;
+        cssCode = levels[currentLevel].css || "";
+      } else if (currentTab === 'css') {
+        htmlCode = levels[currentLevel].html;
+        cssCode = document.getElementById("htmlEditor").value;
+      } else {
+        htmlCode = levels[currentLevel].html;
+        cssCode = levels[currentLevel].css || "";
+      }
+      
+      const iframe = document.getElementById("preview");
+      iframe.srcdoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>${cssCode}</style>
+        </head>
+        <body>${htmlCode}</body>
+        </html>
+      `;
+    }
+
+    function showHint() {
+      alert(levels[currentLevel].hint);
+    }
+
+    function resetCode() {
+      if (currentTab === 'html') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].html;
+      } else if (currentTab === 'css') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].css || "";
+      } else if (currentTab === 'js') {
+        document.getElementById("htmlEditor").value = levels[currentLevel].js || "";
+      }
+      updatePreview();
+    }
+
+    function checkSolution() {
+      let userSolution = document.getElementById("htmlEditor").value.trim();
+      let correctSolution = "";
+      
+      if (currentTab === 'html') {
+        correctSolution = levels[currentLevel].solution.trim();
+      } else if (currentTab === 'css') {
+        correctSolution = levels[currentLevel].cssSolution ? levels[currentLevel].cssSolution.trim() : "";
+      } else {
+        // For JS levels (none in current implementation)
+        correctSolution = "";
+      }
+      
+      if (userSolution === correctSolution) {
+        if (!completedLevels[currentLevel]) {
+          score += 20;
+          document.getElementById("score").textContent = score;
+          completedLevels[currentLevel] = true;
+          starRatings[currentLevel] = 3; // 3 stars for perfect solution
+          updateLevelButtons();
+          
+          // Show completion message with animation
+          document.getElementById("completion-message").classList.add("show");
+          document.getElementById("progress-bar").style.width = "100%";
+          
+          // Create confetti effect
+          createConfetti();
+        }
+        
+        // Check if all levels are completed
+        if (completedLevels.every(level => level)) {
+          setTimeout(() => {
+            showFinalModal();
+          }, 1500);
+        } else {
+          // Auto-advance to next level if not last level
+          if (currentLevel < levels.length - 1) {
+            setTimeout(() => {
+              loadLevel(currentLevel + 1);
+            }, 1500);
+          }
+        }
+      } else {
+        // Shake animation for wrong answer
+        document.getElementById("htmlEditor").classList.add("shake");
+        setTimeout(() => {
+          document.getElementById("htmlEditor").classList.remove("shake");
+        }, 500);
+        
+        // Partial credit system
+        if (starRatings[currentLevel] < 1) {
+          starRatings[currentLevel] = 1; // 1 star for attempting
+          updateLevelButtons();
+        }
+      }
+    }
+
+    function createConfetti() {
+      const colors = ['#6ee7ff', '#a78bfa', '#4ade80', '#f87171', '#fbbf24'];
+      const container = document.querySelector('.code-area');
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        container.appendChild(confetti);
+        
+        setTimeout(() => {
+          confetti.remove();
+        }, 5000);
+      }
+    }
+
+    function updateLevelButtons() {
+      for (let i = 0; i < levels.length; i++) {
+        const btn = document.querySelector(`.level-btn:nth-child(${i + 2})`);
+        const starsContainer = document.getElementById(`stars-${i}`);
+        
+        if (completedLevels[i]) {
+          btn.classList.add("completed");
+        } else {
+          btn.classList.remove("completed");
+        }
+        
+        // Update stars
+        starsContainer.innerHTML = '';
+        for (let s = 0; s < starRatings[i]; s++) {
+          const star = document.createElement("span");
+          star.className = "star";
+          star.innerHTML = "★";
+          starsContainer.appendChild(star);
+        }
+      }
+    }
+
+    function showFinalModal() {
+      const modal = document.getElementById("congrats-modal");
+      const message = document.getElementById("final-message");
+      
+      message.textContent = `You've completed all levels with a score of ${score}/140!`;
+      modal.classList.add("active");
+      
+      // Create confetti for modal
+      createModalConfetti();
+    }
+
+    function createModalConfetti() {
+      const colors = ['#6ee7ff', '#a78bfa', '#4ade80', '#f87171', '#fbbf24'];
+      const container = document.querySelector('.modal-content');
+      
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        container.appendChild(confetti);
+        
+        setTimeout(() => {
+          confetti.remove();
+        }, 5000);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("congrats-modal").classList.remove("active");
+    }
+
+    // Add shake animation to CSS
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+      .shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+      }
+    `;
+    document.head.appendChild(style);
+
+    window.onload = () => {
+      loadLevel(0);
+      updateLevelButtons();
+    };
+  </script>
+</body>
+</html>
